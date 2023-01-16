@@ -33,14 +33,25 @@ for record in data:
     session.add(model(id=record.get('pk'), **record.get('fields')))
 session.commit()
 
-publ_name = input('Введите Имя издателя или id: ')
-if publ_name.isnumeric():
-    for c in session.query(Publisher).filter(
-            Publisher.id == int(publ_name)).all():
-        print(c)
-else:
-    for c in session.query(Publisher).filter(
-            Publisher.name.like(f'%{publ_name}%')).all():
-        print(c)
+publ_id = input('Введите id издателя: ')
+
+subq = session.query(Publisher).filter(Publisher.id == publ_id).subquery()
+subq2 = session.query(Book).join(subq, Book.id_publisher == subq.c.id).subquery()
+subq3 = session.query(Stock).join(subq2, Stock.id_book == subq2.c.id).subquery()
+subq4 = session.query(Sale).join(subq3, Sale.id_stock == subq3.c.id).all()
+for stores in subq4:
+    print(stores.stock.book, stores.stock.shop, stores.price, stores.date_sale)
+
+
+
+# publ_name = input('Введите Имя издателя или id: ')
+# if publ_name.isnumeric():
+#     for c in session.query(Publisher).filter(
+#             Publisher.id == int(publ_name)).all():
+#         print(c)
+# else:
+#     for c in session.query(Publisher).filter(
+#             Publisher.name.like(f'%{publ_name}%')).all():
+#         print(c)
 
 session.close()
